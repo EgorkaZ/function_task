@@ -9,8 +9,7 @@ constexpr std::size_t AlignOfStorage = alignof(void *);
 
 template <class T>
 constexpr bool fits_storage = sizeof(T) <= SizeOfStorage &&
-                              alignof(T) % AlignOfStorage &&
-                              std::is_nothrow_move_constructible<T>::value;
+        alignof(T) % AlignOfStorage && std::is_nothrow_move_constructible<T>::value;
 
 using storage_t = std::aligned_storage<SizeOfStorage, AlignOfStorage>;
 
@@ -49,7 +48,6 @@ struct func_storage
     }
 
 private:
-
     template <bool is_const, class C>
     using cond_const_ptr = std::conditional_t<is_const, const C *, C *>;
 
@@ -73,7 +71,7 @@ private:
         if constexpr (fits_small) {
             new (&m_storage) Functor(std::forward<F>(f));
         } else {
-            reinterpret_cast<Functor * &>(m_storage) = new Functor(std::forward<F>(f));
+            reinterpret_cast<Functor *&>(m_storage) = new Functor(std::forward<F>(f));
         }
     }
 
@@ -86,14 +84,13 @@ struct function_caller_base;
 template <class Functor, class Signature>
 struct function_caller;
 
-
 template <class Ret, class... Args>
 struct function_caller_base<Ret(Args...)>
 {
     template <class Functor>
     using Derived = function_caller<Functor, Ret(Args...)>;
 
-    virtual Ret invoke(Args && ...) = 0;
+    virtual Ret invoke(Args &&...) = 0;
 
     virtual function_caller_base * make_copy() const = 0;
 
@@ -130,7 +127,7 @@ struct function_caller<Functor, Ret(Args...)> final : function_caller_base<Ret(A
     {
     }
 
-    Ret invoke(Args && ... args) final
+    Ret invoke(Args &&... args) final
     {
         return m_storage.get_func()(std::forward<Args>(args)...);
     }
@@ -154,5 +151,4 @@ private:
     func_storage<Functor> m_storage;
 };
 
-}; // detail
-
+}; // namespace detail

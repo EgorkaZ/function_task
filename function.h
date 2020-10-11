@@ -17,16 +17,16 @@ template <typename F>
 struct function;
 
 template <typename R, typename... Args>
-struct function<R (Args...)>
+struct function<R(Args...)>
 {
     function() = default;
 
-    function(function const& other)
+    function(function const & other)
         : m_caller(other ? other.m_caller->make_copy() : nullptr)
     {
     }
 
-    function(function&& other) noexcept
+    function(function && other) noexcept
         : m_caller(std::move(other.m_caller))
     {
     }
@@ -37,7 +37,7 @@ struct function<R (Args...)>
     {
     }
 
-    function& operator=(function const& rhs)
+    function & operator=(function const & rhs)
     {
         if (this != &rhs) {
             if (rhs) {
@@ -48,7 +48,7 @@ struct function<R (Args...)>
         }
         return *this;
     }
-    function& operator=(function&& rhs) noexcept
+    function & operator=(function && rhs) noexcept
     {
         m_caller.swap(rhs.m_caller);
         return *this;
@@ -69,13 +69,13 @@ struct function<R (Args...)>
     }
 
     template <typename T>
-    T* target() noexcept
+    T * target() noexcept
     {
         return (*this) ? m_caller->template get_func_ptr<T>() : nullptr;
     }
 
     template <typename T>
-    T const* target() const noexcept
+    T const * target() const noexcept
     {
         return (*this) ? m_caller->template get_func_ptr<T>() : nullptr;
     }
