@@ -11,7 +11,7 @@ template <class T>
 constexpr bool fits_storage = sizeof(T) <= SizeOfStorage &&
         alignof(T) % AlignOfStorage && std::is_nothrow_move_constructible<T>::value;
 
-using storage_t = std::aligned_storage<SizeOfStorage, AlignOfStorage>;
+using storage_t = std::aligned_storage<SizeOfStorage, AlignOfStorage>::type;
 
 template <class Functor, bool fits_small = fits_storage<Functor>>
 struct func_storage
@@ -39,12 +39,16 @@ struct func_storage
 
     void destruct() noexcept(std::is_nothrow_destructible_v<Functor>)
     {
-        get_func_ptr()->~Functor();
+        if constexpr (fits_small) {
+            get_func().~Functor();
+        } else {
+            delete get_func_ptr();
+        }
     }
 
     ~func_storage() noexcept(std::is_nothrow_destructible_v<Functor>)
     {
-        get_func_ptr()->~Functor();
+        destruct();
     }
 
 private:
@@ -58,10 +62,11 @@ private:
     static cond_const_ptr<is_const, Functor> functor_from_storage(cond_const_ref<is_const, storage_t> storage) noexcept
     {
         using ReturnedFunctor = cond_const_ptr<is_const, Functor>;
+
         if constexpr (fits_small) {
             return reinterpret_cast<cond_const_ptr<is_const, Functor>>(&storage);
         } else {
-            return reinterpret_cast<ReturnedFunctor>(reinterpret_cast<cond_const_ref<is_const, std::ptrdiff_t>>(storage));
+            return reinterpret_cast<Functor * const &>(storage);
         }
     }
 
